@@ -127,17 +127,35 @@ fn zillion_prefix(num: usize) -> String {
 	name
 }
 
+// Adjusts the result of zillion_number to use the long scale
+// instead of the short scale. Output is a new power of 1000
+// which may or may not use the "ard" suffix (new suffix is
+// part of the output).
+fn adjust_for_longscale(num: usize) -> (usize, &'static str) {
+	let suffix = if num % 2 == 0 { "on" } else { "ard" };
+	let power = ((num+2) / 2) - 1;
+	(power, suffix)
+}
+
 // Create a name for an arbitrary power of 1000.
 // Value for zero is the empty string.
 // Value for one is "thousand".
 // Value for anything greater will involve repeated application of the
-// zillion_prefix function, to create a number ending in "illion".
-fn zillion_number(num: usize) -> String {
+// zillion_prefix function, to create a number ending in "illion",
+// or "ard" depending on whether or not we are using the long scale.
+fn zillion_number(num: usize, short: bool) -> String {
 	if num == 0 { return String::from(""); }
 	if num == 1 { return String::from("thousand"); }
 	
-	let mut name  = String::from("");
-	let mut power = num - 1;
+	let mut name   = String::from("");
+	let mut power  = num - 1;
+	let mut suffix = "on";
+
+	if !short {
+		let (p,s) = adjust_for_longscale(num);
+		power = p;
+		suffix = s;
+	}
 
 	// Prefixes technically added in reverse order here.
 	// e.g. in millinillion, first add "nilli", then "milli", then "on".
@@ -147,7 +165,7 @@ fn zillion_number(num: usize) -> String {
 		power /= 1000;
 	}
 
-	name.push_str("on");
+	name.push_str(suffix);
 	name
 }
 
@@ -195,7 +213,7 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 		                .parse::<usize>()
 		                .unwrap();
 		let leading = three_digit_name(num);
-		let zillion = zillion_number(remaining / 3);
+		let zillion = zillion_number(remaining / 3, short);
 
 		output.push_str(leading.as_str());
 		if !zillion.is_empty() {
@@ -214,7 +232,7 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 		                .parse::<usize>()
 		                .unwrap();
 		let leading = three_digit_name(num);
-		let zillion = zillion_number(remaining / 3 - 1);
+		let zillion = zillion_number(remaining / 3 - 1, short);
 
 		if !leading.is_empty() {
 			if !output.is_empty() { output.push(' '); }
@@ -250,6 +268,7 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 /// # Example
 ///
 /// ```
+/// use googology::conway_wechsler::power_of_ten;
 /// let milliard = power_of_ten("9", false).unwrap();
 /// let billion = power_of_ten("9", true).unwrap();
 /// assert_eq!("one milliard", milliard.as_str());
