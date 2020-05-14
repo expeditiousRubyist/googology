@@ -8,6 +8,15 @@
 //! billion...), which is more common in European languages, and which used to
 //! be the standard for British English.
 
+extern crate num_traits;
+extern crate num_bigint;
+
+use std::str::FromStr;
+use num_traits::cast::ToPrimitive;
+use num_traits::identities::Zero;
+use num_traits::identities::One;
+use num_bigint::BigUint;
+
 // Substrings used to construct names for the numbers 1-100.
 static NAMES_UPTO_TWENTY: [&'static str; 20] = [
 	"", "one", "two", "three", "four", "five", "six", "seven", "eight",
@@ -275,7 +284,56 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 /// assert_eq!("one billion", billion.as_str());
 /// ```
 pub fn power_of_ten(digits: &str, short: bool) -> Result<String, &'static str> {
-	Err("Not implemented")
+	// Sanity check
+	if !is_all_digits(digits) {
+		return Err("digits should only contain the values 0-9")
+	}
+
+	let mut power = BigUint::from_str(digits).unwrap();
+
+	// Get the leading word (e.g. "ten" in "ten million")
+	let m = (&power % 3u32).to_u32().unwrap();
+	let s = match m {
+		0 => "one",
+		1 => "ten",
+		2 => "one hundred",
+		_ => unreachable!(),
+	};
+	let mut output = String::from(s);
+
+	// Convert into power of one thousand
+	// We may return early for edge cases.
+	power /= 3u32;
+	if power.is_zero() { return Ok(output); }
+	if power.is_one() {
+		output.push_str(" thousand");
+		return Ok(output);
+	}
+
+	// Compute zillion number.
+	power -= 1u32;
+	output.push_str(" ");
+	let loc = output.len(); // Location to insert prefixes at
+
+	// Adjust for long scale if necessary
+	let mut suffix = "on";
+	if !short {
+		suffix = if (&power % 2u32).is_zero() { "ard" } else { "on" };
+		power += 3u32;
+		power /= 2u32;
+		power -= 1u32;
+	}
+
+	// Add prefixes in reverse order because we are stupid and inefficient.
+	while !power.is_zero() {
+		let m = (&power % 1000u32).to_usize().unwrap();
+		let prefix = zillion_prefix(m);
+		output.insert_str(loc, prefix.as_str());
+		power /= 1000u32;
+	}
+
+	output.push_str(suffix);
+	Ok(output)
 }
 
 #[cfg(test)]
@@ -304,5 +362,13 @@ mod tests {
 		let milliard = full_name("1000000000", false).unwrap();
 		assert_eq!("one milliard", milliard.as_str());
 		assert_eq!("one billion", billion.as_str());
+	}
+
+	#[test]
+	fn large_powers() {
+		let googol_ss = power_of_ten("100", true).unwrap();
+		let googol_ls = power_of_ten("100", false).unwrap();
+		assert_eq!("ten duotrigintillion", googol_ss.as_str());
+		assert_eq!("ten sedecilliard", googol_ls.as_str());
 	}
 }
