@@ -17,6 +17,8 @@ use num_traits::identities::Zero;
 use num_traits::identities::One;
 use num_bigint::BigUint;
 
+use crate::common::latin_prefix;
+
 // Substrings used to construct names for the numbers 1-100.
 static NAMES_UPTO_TWENTY: [&'static str; 20] = [
 	"", "one", "two", "three", "four", "five", "six", "seven", "eight",
@@ -27,29 +29,6 @@ static NAMES_UPTO_TWENTY: [&'static str; 20] = [
 static TENS_NAMES: [&'static str; 10] = [
 	"", "", "twenty", "thirty", "fourty", "fifty", "sixty", "seventy",
 	"eighty", "ninety"
-];
-
-// Substrings used to construct names of larger numbers
-// Since they all end in -illion (or -illiard in half of the names in the
-// long count system), we call them "zillion" numbers.
-static ZILLION_UNIT_PREFIXES: [&'static str; 10] = [
-	"", "un", "duo", "tre", "quattuor", "quinqua", "se", "septe", "octo",
-	"nove"
-];
-
-static ZILLION_TENS_PREFIXES: [&'static str; 10] = [
-	"", "deci", "viginti", "triginta", "quadraginta", "quinquaginta",
-	"sexaginta", "septuaginta", "octoginta", "nonaginta"
-];
-
-static ZILLION_HUNDREDS_PREFIXES: [&'static str; 10] = [
-	"", "centi", "ducenti", "trecenti", "quadringenti", "quingenti",
-	"sescenti", "septingenti", "octingenti", "nongenti"
-];
-
-static ZILLIONS_UNDER_TEN: [&'static str; 10] = [
-	"nilli", "milli", "billi", "trilli", "quadrilli", "quintilli",
-	"sextilli", "septilli", "octilli", "nonilli"
 ];
 
 // Produces a name for some number in the range [0, 999].
@@ -90,48 +69,7 @@ fn three_digit_name(num: usize) -> String {
 // Value for zero is "nilli", for use in chained zillion numbers.
 // Values above 999 will panic.
 fn zillion_prefix(num: usize) -> String {
-	assert!(num < 1000, "Input to zillion_prefix is more than 3 digits!");
-
-	if num < 10 { return String::from(ZILLIONS_UNDER_TEN[num]); }
-
-	let hs = num / 100;      // Hundreds place
-	let ts = num % 100 / 10; // Tens place
-	let us = num % 10;       // Units place
-
-	let mut name = String::from(ZILLION_UNIT_PREFIXES[us]);
-	if ts > 0 {
-		// Special unit place endings
-		match (us, ts) {
-			(3, 2..=5) | (3, 8) => name.push('s'), // tres
-			(6, 2..=5)          => name.push('s'), // ses
-			(6, 8)              => name.push('x'), // sex
-			(7, 1) | (7, 3..=7) => name.push('n'), // septen
-			(7, 2) | (7, 8)     => name.push('m'), // septem
-			(9, 1) | (9, 3..=7) => name.push('n'), // noven
-			(9, 2) | (9, 8)     => name.push('m'), // novem
-			_ => (),
-		}
-
-		name.push_str(ZILLION_TENS_PREFIXES[ts]);
-		name.push_str(ZILLION_HUNDREDS_PREFIXES[hs]);
-	}
-	else {
-		// Special unit place endings
-		match (us, hs) {
-			(3, 1) | (3, 3..=5) | (3, 8) => name.push('s'), // tres
-			(6, 1) | (6, 8) => name.push('x'), // sex
-			(6, 3..=5)      => name.push('s'), // ses
-			(7, 1..=7)      => name.push('n'), // septen
-			(7, 8)          => name.push('m'), // septem
-			(9, 1..=7)      => name.push('n'), // noven
-			(9, 8)          => name.push('m'), // novem
-			_ => (),
-		}
-
-		name.push_str(ZILLION_HUNDREDS_PREFIXES[hs]);
-	}
-
-	name.pop();
+	let mut name = latin_prefix(num).unwrap();
 	name.push_str("illi");
 	name
 }
