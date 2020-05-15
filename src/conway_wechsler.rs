@@ -17,53 +17,7 @@ use num_traits::identities::Zero;
 use num_traits::identities::One;
 use num_bigint::BigUint;
 
-use crate::common::latin_prefix;
-
-// Substrings used to construct names for the numbers 1-100.
-static NAMES_UPTO_TWENTY: [&'static str; 20] = [
-	"", "one", "two", "three", "four", "five", "six", "seven", "eight",
-	"nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
-	"sixteen", "seventeen", "eighteen", "nineteen"
-];
-
-static TENS_NAMES: [&'static str; 10] = [
-	"", "", "twenty", "thirty", "fourty", "fifty", "sixty", "seventy",
-	"eighty", "ninety"
-];
-
-// Produces a name for some number in the range [0, 999].
-// The name for zero is the empty string.
-// Values above 999 will panic
-fn three_digit_name(num: usize) -> String {
-	assert!(num < 1000, "Input to three_digit_name is more than 3 digits!");
-
-	let hs = num / 100;      // Hundreds place
-	let ts = num % 100 / 10; // Tens place
-	let us = num % 10;       // Units place
-
-	// Hundred name (if applicable)
-	let mut name = String::from(NAMES_UPTO_TWENTY[hs]);
-	if !name.is_empty() { name.push_str(" hundred"); }
-
-	// Rest of name
-	if ts > 1 {
-		if !name.is_empty() { name.push_str(" "); }
-		name.push_str(TENS_NAMES[ts]);
-		if us > 0 { 
-			name.push_str(" ");
-			name.push_str(NAMES_UPTO_TWENTY[us]);
-		}
-	}
-	else {
-		let aux = ts*10 + us;
-		if aux > 0 {
-			if !name.is_empty() { name.push_str(" "); }
-			name.push_str(NAMES_UPTO_TWENTY[aux]);
-		}
-	}
-
-	name
-}
+use crate::common::{latin_prefix, myriad_number};
 
 // Create a name for a single 3 digit zillion number, ending in -illi.
 // Value for zero is "nilli", for use in chained zillion numbers.
@@ -159,7 +113,7 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 		                .unwrap()
 		                .parse::<usize>()
 		                .unwrap();
-		let leading = three_digit_name(num);
+		let leading = myriad_number(num).unwrap();
 		let zillion = zillion_number(remaining / 3, short);
 
 		output.push_str(leading.as_str());
@@ -178,7 +132,7 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 		                .unwrap()
 		                .parse::<usize>()
 		                .unwrap();
-		let leading = three_digit_name(num);
+		let leading = myriad_number(num).unwrap();
 		let zillion = zillion_number(remaining / 3 - 1, short);
 
 		if !leading.is_empty() {

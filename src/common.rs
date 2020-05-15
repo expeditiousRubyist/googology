@@ -3,6 +3,19 @@
  * used by Knuth.
  */
 
+// Substrings used to construct names for the numbers 1-100.
+// These are used by the myriad_number function.
+static NAMES_UPTO_TWENTY: [&'static str; 20] = [
+	"", "one", "two", "three", "four", "five", "six", "seven", "eight",
+	"nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+	"sixteen", "seventeen", "eighteen", "nineteen"
+];
+
+static TENS_NAMES: [&'static str; 10] = [
+	"", "", "twenty", "thirty", "fourty", "fifty", "sixty", "seventy",
+	"eighty", "ninety"
+];
+
 // Arrays used in the construction of latin prefixes
 // The base prefixes are used for values 0 - 9, while the units, tens, and
 // hundreds are used for values 10 - 999.
@@ -87,4 +100,50 @@ pub fn latin_prefix(num: usize) -> Option<String> {
 	// an -illion or -yllion.
 	prefix.pop();
 	Some(prefix)
+}
+
+// Helper function for myriad number
+// Generates a name for a number in the range [0,99].
+// The name for the number is the empty string.
+fn name_hundreds(tens: usize, units: usize) -> String {
+	let mut output = String::from(TENS_NAMES[tens]);
+
+	if output.is_empty() { 
+		output.push_str(NAMES_UPTO_TWENTY[(10*tens)+units]);
+	}
+	else if units > 0 {
+		output.push(' ');
+		output.push_str(NAMES_UPTO_TWENTY[units]);
+	}
+
+	output
+}
+
+// This function converts a number in the range [1, 9999] to English words.
+// Due to its use in the -yllion system, this function will not use the word
+// "thousand", however, instead preferring "ten hundred" or something similar.
+// Although this function is also used by Conway-Wechsler, which does use
+// thousands, this will not be a problem as that function will only use this
+// for three digit numbers.
+pub fn myriad_number(num: usize) -> Option<String> {
+	if num >= 10000 {
+		return None;
+	}
+
+	let ms = num / 1000;       // Thousands (milia) place
+	let hs = num % 1000 / 100; // Hundreds place
+	let ts = num % 100 / 10;   // Tens place
+	let us = num % 10;         // Units place
+
+	let mut output = name_hundreds(ms, hs);
+	let     append = name_hundreds(ts, us);
+
+	if !output.is_empty() { output.push_str(" hundred "); }
+	if !append.is_empty() { 
+		output.push_str(append.as_str());
+		output.push(' ');
+	}
+
+	output.pop(); // Remove the space at the end
+	Some(output)
 }
