@@ -3,6 +3,12 @@ name = "googology"
 version = "0.1.0"
 authors = ["rubyist <rubyist.personal@protonmail.com>"]
 edition = "2018"
+readme = "README.md"
+license = "Apache-2.0"
+repository = "https://github.com/expeditiousRubyist/googology/"
+description = "A crate for giving names to large numbers."
+keywords = ["mathematics", "googology"]
+categories = ["mathematics"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
