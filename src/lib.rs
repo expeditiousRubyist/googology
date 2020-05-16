@@ -9,3 +9,4 @@
 
 mod common;
 pub mod conway_wechsler;
+pub mod knuth_yllion;
