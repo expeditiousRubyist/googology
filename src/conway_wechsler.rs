@@ -17,7 +17,12 @@ use num_traits::identities::Zero;
 use num_traits::identities::One;
 use num_bigint::BigUint;
 
-use crate::common::{latin_prefix, myriad_number};
+use crate::common::{
+	is_all_digits,
+	num_from_slice,
+	latin_prefix,
+	myriad_number
+};
 
 // Create a name for a single 3 digit zillion number, ending in -illi.
 // Value for zero is "nilli", for use in chained zillion numbers.
@@ -60,11 +65,6 @@ fn zillion_number(num: usize, short: bool) -> String {
 	name
 }
 
-// Test an input string to see if it contains anything other than 0-9.
-fn is_all_digits(s: &str) -> bool {
-	s.chars().all(|c| c.is_digit(10))
-}
-
 /// Gives a full length name for a number represented by an arbitrary sequence
 /// of digits (example: "nineteen thousand fourty two" for "19042").
 ///
@@ -99,10 +99,7 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 	let first = remaining % 3;
 
 	if first > 0 {
-		let num = digits.get(i..i+first)
-		                .unwrap()
-		                .parse::<usize>()
-		                .unwrap();
+		let num     = num_from_slice(digits, i, first);
 		let leading = myriad_number(num).unwrap();
 		let zillion = zillion_number(remaining / 3, short);
 
@@ -118,17 +115,14 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 
 	// Handle the rest of the digits in chunks of three at a time.
 	while remaining > 0 {
-		let num = digits.get(i..i+3)
-		                .unwrap()
-		                .parse::<usize>()
-		                .unwrap();
+		let num     = num_from_slice(digits, i, 3);
 		let leading = myriad_number(num).unwrap();
 		let zillion = zillion_number(remaining / 3 - 1, short);
 
 		if !leading.is_empty() {
 			if !output.is_empty() { output.push(' '); }
-			output.push_str(leading.as_str());
 
+			output.push_str(leading.as_str());
 			if !zillion.is_empty() {
 				output.push(' ');
 				output.push_str(zillion.as_str());

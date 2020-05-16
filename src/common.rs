@@ -38,6 +38,18 @@ static LATIN_HUNDREDS_PREFIXES: [&str; 10] = [
 	"sescenti", "septingenti", "octingenti", "nongenti"
 ];
 
+// Test an input string to see if it contains anything other than 0-9.
+pub fn is_all_digits(s: &str) -> bool {
+	s.chars().all(|c| c.is_digit(10))
+}
+
+// Casts a slice of a string of all digits into usize.
+// This performs an unwrap twice, but since we should already verify that all
+// characters in the string are numbers, this should never panic.
+pub fn num_from_slice(digits: &str, index: usize, ndigits: usize) -> usize {
+	digits.get(index..index+ndigits).unwrap().parse::<usize>().unwrap()
+}
+
 // Provides a prefix for some "-illion" or "-yllion" number.
 // num should be some value between 0 and 999, or else None is returned
 // for sanity's sake. Number names with complex prefixes such as millinillion
