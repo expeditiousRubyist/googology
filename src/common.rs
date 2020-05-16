@@ -5,13 +5,13 @@
 
 // Substrings used to construct names for the numbers 1-100.
 // These are used by the myriad_number function.
-static NAMES_UPTO_TWENTY: [&'static str; 20] = [
+static NAMES_UPTO_TWENTY: [&str; 20] = [
 	"", "one", "two", "three", "four", "five", "six", "seven", "eight",
 	"nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
 	"sixteen", "seventeen", "eighteen", "nineteen"
 ];
 
-static TENS_NAMES: [&'static str; 10] = [
+static TENS_NAMES: [&str; 10] = [
 	"", "", "twenty", "thirty", "fourty", "fifty", "sixty", "seventy",
 	"eighty", "ninety"
 ];
@@ -19,21 +19,21 @@ static TENS_NAMES: [&'static str; 10] = [
 // Arrays used in the construction of latin prefixes
 // The base prefixes are used for values 0 - 9, while the units, tens, and
 // hundreds are used for values 10 - 999.
-static LATIN_BASE_PREFIXES: [&'static str; 10] = [
+static LATIN_BASE_PREFIXES: [&str; 10] = [
 	"n", "m", "b", "tr", "quadr", "quint", "sext", "sept", "oct", "non"
 ];
 
-static LATIN_UNIT_PREFIXES: [&'static str; 10] = [
+static LATIN_UNIT_PREFIXES: [&str; 10] = [
 	"", "un", "duo", "tre", "quattuor", "quinqua", "se", "septe", "octo",
 	"nove"
 ];
 
-static LATIN_TENS_PREFIXES: [&'static str; 10] = [
+static LATIN_TENS_PREFIXES: [&str; 10] = [
 	"", "deci", "viginti", "triginta", "quadraginta", "quinquaginta",
 	"sexaginta", "septuaginta", "octoginta", "nonaginta"
 ];
 
-static LATIN_HUNDREDS_PREFIXES: [&'static str; 10] = [
+static LATIN_HUNDREDS_PREFIXES: [&str; 10] = [
 	"", "centi", "ducenti", "trecenti", "quadringenti", "quingenti",
 	"sescenti", "septingenti", "octingenti", "nongenti"
 ];

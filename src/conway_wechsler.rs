@@ -28,16 +28,6 @@ fn zillion_prefix(num: usize) -> String {
 	name
 }
 
-// Adjusts the result of zillion_number to use the long scale
-// instead of the short scale. Output is a new power of 1000
-// which may or may not use the "ard" suffix (new suffix is
-// part of the output).
-fn adjust_for_longscale(num: usize) -> (usize, &'static str) {
-	let suffix = if num % 2 == 0 { "on" } else { "ard" };
-	let power = ((num+2) / 2) - 1;
-	(power, suffix)
-}
-
 // Create a name for an arbitrary power of 1000.
 // Value for zero is the empty string.
 // Value for one is "thousand".
@@ -52,10 +42,10 @@ fn zillion_number(num: usize, short: bool) -> String {
 	let mut power  = num - 1;
 	let mut suffix = "on";
 
+	// Adjust for long scale
 	if !short {
-		let (p,s) = adjust_for_longscale(num);
-		power = p;
-		suffix = s;
+		if num % 2 != 0 { suffix = "ard"; }
+		power = ((num + 2) / 2) - 1;
 	}
 
 	// Prefixes technically added in reverse order here.
