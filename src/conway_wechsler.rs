@@ -66,7 +66,7 @@ fn zillion_number(num: usize, short: bool) -> String {
 }
 
 /// Gives a full length name for a number represented by an arbitrary sequence
-/// of digits (example: "nineteen thousand fourty two" for "19042").
+/// of digits.
 ///
 /// # Arguments
 /// 
@@ -77,6 +77,16 @@ fn zillion_number(num: usize, short: bool) -> String {
 /// be used. For reference, the represented by `10^9` is called "one billion"
 /// using the short scale. When `short` is set to false, the long scale is used
 /// instead, and this number would be called "one milliard".
+/// 
+/// # Example
+/// 
+/// ```
+/// use googology::conway_wechsler::full_name;
+/// let milliard = full_name("19000000042", false).unwrap();
+/// let billion = full_name("19000000042", true).unwrap();
+/// assert_eq!("nineteen milliard forty two", milliard.as_str());
+/// assert_eq!("nineteen billion forty two", billion.as_str());
+/// ```
 pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 	// Sanity check
 	if !is_all_digits(digits) {
