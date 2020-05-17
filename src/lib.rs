@@ -7,4 +7,6 @@
 //! Currently, this crate only supports the Conway-Wechsler system for
 //! naming numbers, however other systems may be added in the future.
 
+mod common;
 pub mod conway_wechsler;
+pub mod knuth_yllion;
