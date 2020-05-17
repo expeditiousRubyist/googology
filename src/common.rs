@@ -12,7 +12,7 @@ static NAMES_UPTO_TWENTY: [&str; 20] = [
 ];
 
 static TENS_NAMES: [&str; 10] = [
-	"", "", "twenty", "thirty", "fourty", "fifty", "sixty", "seventy",
+	"", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy",
 	"eighty", "ninety"
 ];
 

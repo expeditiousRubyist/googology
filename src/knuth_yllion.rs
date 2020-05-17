@@ -43,14 +43,17 @@ use crate::common::{
 // This function's behavior should not be considered perfectly equivalent to the
 // zillion_number function on the conway_wechsler module, because it is not
 // bijective. The number 12,0000,0042,0000 is given the full_name of
-// "twelve myriad myllion fourty two myriad", indicating that the word "myriad"
+// "twelve myriad myllion forty two myriad", indicating that the word "myriad"
 // is intended to be returned both for the grouping containing 42, as well as
-// the grouping containing 12. 
-fn zyllion_number(num: usize) -> String {
+// the grouping containing 12.
+//
+// Note: This function also returns an integer to be compared against the
+// last_largest value in the full_name function.
+fn zyllion_number(num: usize) -> (String, usize) {
 	// The last grouping has no qualifier,
 	// and every other grouping is just "myriad".
-	if num == 0     { return String::from(""); }
-	if num % 2 == 1 { return String::from("myriad"); }
+	if num == 0     { return (String::from(""), 0); }
+	if num % 2 == 1 { return (String::from("myriad"), 1); }
 
 	// For the rest, we want to find the greatest power of 2 that we're a
 	// multiple of, convert it into a latin prefix, and add "yllion".
@@ -62,7 +65,7 @@ fn zyllion_number(num: usize) -> String {
 
 	name.push_str(prefix.as_str());
 	name.push_str("yllion");
-	name
+	(name, greatest_power_of_two + 1)
 }
 
 /// Gives a full length name for a number represented by an arbitrary sequence
@@ -79,7 +82,7 @@ fn zyllion_number(num: usize) -> String {
 /// ```
 /// use googology::knuth_yllion::full_name;
 /// let name = full_name("1200426208").unwrap();
-/// let expected = "twelve myllion fourty two myriad sixty two hundred eight";
+/// let expected = "twelve myllion forty two myriad sixty two hundred eight";
 /// assert_eq!(name.as_str(), expected);
 /// ```
 pub fn full_name(digits: &str) -> Result<String, &'static str> {
@@ -97,6 +100,11 @@ pub fn full_name(digits: &str) -> Result<String, &'static str> {
 
 	if !output.is_empty() { return Ok(output); }
 
+	// Because each term zyllion term describes the quantity of the next
+	// largest term (i.e. one myriad myllion), we keep track of the most
+	// recent largest term we've outputted.
+	let mut last_largest : usize = 0;
+
 	// Determine number of digits to process, and how many digits are in
 	// the first grouping.
 	let mut i = tmp.unwrap();
@@ -106,12 +114,13 @@ pub fn full_name(digits: &str) -> Result<String, &'static str> {
 	if first > 0 {
 		let num     = num_from_slice(digits, i, first);
 		let leading = myriad_number(num).unwrap();
-		let zyllion = zyllion_number(remaining / 4);
+		let (zyllion, largest) = zyllion_number(remaining / 4);
 
 		output.push_str(leading.as_str());
 		if !zyllion.is_empty() {
 			output.push(' ');
 			output.push_str(zyllion.as_str());
+			last_largest = largest;
 		}
 
 		remaining -= first;
@@ -122,10 +131,8 @@ pub fn full_name(digits: &str) -> Result<String, &'static str> {
 	while remaining > 0 {
 		let num     = num_from_slice(digits, i, 4);
 		let leading = myriad_number(num).unwrap();
-		let zyllion = zyllion_number((remaining - 1) / 4);
+		let (zyllion, largest) = zyllion_number((remaining - 1) / 4);
 
-		// FIXME: can't currently handle situation of multiple
-		// groups of trailing zeroes.
 		if !leading.is_empty() {
 			if !output.is_empty() { output.push(' '); }
 
@@ -133,7 +140,18 @@ pub fn full_name(digits: &str) -> Result<String, &'static str> {
 			if !zyllion.is_empty() {
 				output.push(' ');
 				output.push_str(zyllion.as_str());
+				last_largest = largest;
 			}
+		}
+
+		// This condition does not trigger if we wrote a zyllion in the
+		// above block of code. Instead, it means that we have a group
+		// of all zeroes, but should be writing a zyllion that is larger
+		// than the last one that we wrote.
+		if largest > last_largest {
+			output.push(' ');
+			output.push_str(zyllion.as_str());
+			last_largest = largest;
 		}
 
 		i += 4;
@@ -143,7 +161,7 @@ pub fn full_name(digits: &str) -> Result<String, &'static str> {
 	Ok(output)
 }
 
-pub fn power_of_ten(digits: &str) -> Result<String, &'static str> {
+pub fn power_of_ten(_digits: &str) -> Result<String, &'static str> {
 	Err("Not implemented")
 }
 
@@ -154,8 +172,8 @@ mod tests {
 
 	#[test]
 	fn small_numbers() {
-		let fourty_two_hundred = full_name("4200").unwrap();
-		assert_eq!("fourty two hundred", fourty_two_hundred.as_str());
+		let forty_two_hundred = full_name("4200").unwrap();
+		assert_eq!("forty two hundred", forty_two_hundred.as_str());
 	}
 
 	#[test]
