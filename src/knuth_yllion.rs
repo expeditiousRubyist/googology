@@ -31,6 +31,12 @@
 //! be "one sesviginticentyllion" (10^(2^128)).
 
 extern crate num_traits;
+extern crate num_bigint;
+
+use std::str::FromStr;
+use num_traits::cast::ToPrimitive;
+use num_traits::identities::Zero;
+use num_bigint::BigUint;
 
 use crate::common::{
 	is_all_digits,
@@ -161,8 +167,74 @@ pub fn full_name(digits: &str) -> Result<String, &'static str> {
 	Ok(output)
 }
 
-pub fn power_of_ten(_digits: &str) -> Result<String, &'static str> {
-	Err("Not implemented")
+/// Gives a name for a number representing a power of ten.
+/// This function is equivalent to using `full_name` with a one followed by
+/// as many zeroes as would be indicated the number described by `digits`.
+/// Due to the exponential nature of Knuth's Yllion system, however, this
+/// function may output yllion names that could not by outputted by any input to
+/// the `full_name` function. Unfortunately, there are still some inputs too
+/// large for this function to handle at the current time, so an Err may still
+/// be returned
+///
+/// # Arguments
+/// 
+/// * `digits` - A string slice that holds a representation of the number
+/// using only the digits 0-9. If any other character is present, this function
+/// will return an Err.
+/// 
+/// # Example
+///
+/// ```
+/// use googology::knuth_yllion::power_of_ten;
+/// let one_hundred_myllion = power_of_ten("10").unwrap();
+/// assert_eq!("one hundred myllion", one_hundred_myllion.as_str());
+/// ```
+pub fn power_of_ten(digits: &str) -> Result<String, &'static str> {
+	// Sanity check
+	if !is_all_digits(digits) {
+		return Err("digits should only contain the values 0-9")
+	}
+
+	let mut power = BigUint::from_str(digits).unwrap();
+
+	// Consider small cases
+	let m = (&power % 2u32).to_u32().unwrap();
+	let s = match m {
+		0 => "one",
+		1 => "ten",
+		_ => unreachable!(),
+	};
+	let mut output = String::from(s);
+
+	power /= 2u32;
+	let m = (&power % 2u32).to_u32().unwrap();
+	if m == 1 { output.push_str(" hundred"); }
+
+	power /= 2u32;
+	let m = (&power % 2u32).to_u32().unwrap();
+	if m == 2 { output.push_str(" myriad"); }
+
+	// Break down the power one bit at a time, each time adding a new term.
+	let mut zyl_num : usize = 1;
+	while !power.is_zero() {
+		power /= 2u32;
+
+		if zyl_num > 999 { 
+			return Err("Cannot currently support powers this high");
+		}
+
+		let m = (&power % 2u32).to_u32().unwrap();
+		if m == 1 {
+			let prefix = latin_prefix(zyl_num).unwrap();
+			output.push(' ');
+			output.push_str(prefix.as_str());
+			output.push_str("yllion");
+		}
+
+		zyl_num += 1;		
+	}
+
+	Ok(output)
 }
 
 
@@ -202,5 +274,14 @@ mod tests {
 			seventy eight hundred twenty four myriad myllion";
 		let example_result = full_name(knuth_example).unwrap();
 		assert_eq!(knuth_expected, example_result.as_str());
+	}
+
+	#[test]
+	fn semi_large_power() {
+		let ten_to_the_forty_second = power_of_ten("42").unwrap();
+		assert_eq!(
+			"one hundred myllion tryllion",
+			ten_to_the_forty_second.as_str()
+		);
 	}
 }
