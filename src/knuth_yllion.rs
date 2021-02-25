@@ -57,11 +57,11 @@ use crate::ParseError;
 //
 // Note: This function also returns an integer to be compared against the
 // last_largest value in the full_name function.
-fn zyllion_number(num: usize) -> (String, usize) {
+fn zyllion_number(num: usize) -> Result<(String, usize), ParseError> {
 	// The last grouping has no qualifier,
 	// and every other grouping is just "myriad".
-	if num == 0     { return (String::from(""), 0); }
-	if num % 2 == 1 { return (String::from("myriad"), 1); }
+	if num == 0     { return Ok((String::from(""), 0)); }
+	if num % 2 == 1 { return Ok((String::from("myriad"), 1)); }
 
 	// For the rest, we want to find the greatest power of 2 that we're a
 	// multiple of, convert it into a latin prefix, and add "yllion".
@@ -69,11 +69,11 @@ fn zyllion_number(num: usize) -> (String, usize) {
 	// by necessity, since num is an even-valued usize.
 	let mut name = String::from("");
 	let greatest_power_of_two = num.trailing_zeros() as usize;
-	let prefix = latin_prefix(greatest_power_of_two).unwrap();
+	let prefix = latin_prefix(greatest_power_of_two)?;
 
 	name.push_str(prefix.as_str());
 	name.push_str("yllion");
-	(name, greatest_power_of_two + 1)
+	Ok((name, greatest_power_of_two + 1))
 }
 
 /// Gives a full length name for a number represented by an arbitrary sequence
@@ -94,17 +94,19 @@ fn zyllion_number(num: usize) -> (String, usize) {
 /// assert_eq!(name.as_str(), expected);
 /// ```
 pub fn full_name(digits: &str) -> Result<String, ParseError> {
-	// Sanity check
-	if !is_all_digits(digits) {
-		return Err(ParseError::InvalidDigit);
-	}
+	// Sanity checks. We want the string to be entirely digits, and we want
+	// to handle the case of leading zeroes. If all digits are zero, we want
+	// to just return the string "zero", and otherwise process from the
+	// first nonzero character.
+	let first_nonzero = is_all_digits(digits)
+		.then(|| digits)
+		.ok_or(ParseError::InvalidDigit)
+		.map(|d| d.find(|c| c != '0'))?;
 
-	// Skip leading zeroes. If all characters are 0, return "zero"
-	let tmp = digits.find(|c| c != '0');
-	let mut output = match tmp {
-		Some(_) => String::from(""),
-		None => String::from("zero"),
-	};
+	let (mut i, mut output) = first_nonzero.map_or_else(
+		|| (0, String::from("zero")),
+		|idx| (idx, String::from(""))
+	);
 
 	if !output.is_empty() { return Ok(output); }
 
@@ -115,14 +117,13 @@ pub fn full_name(digits: &str) -> Result<String, ParseError> {
 
 	// Determine number of digits to process, and how many digits are in
 	// the first grouping.
-	let mut i = tmp.unwrap();
 	let mut remaining = digits.len() - i;
 	let first = remaining % 4;
 
 	if first > 0 {
 		let num     = num_from_slice(digits, i, first);
-		let leading = myriad_number(num).unwrap();
-		let (zyllion, largest) = zyllion_number(remaining / 4);
+		let leading = myriad_number(num)?;
+		let (zyllion, largest) = zyllion_number(remaining / 4)?;
 
 		output.push_str(leading.as_str());
 		if !zyllion.is_empty() {
@@ -138,8 +139,8 @@ pub fn full_name(digits: &str) -> Result<String, ParseError> {
 	// Handle the rest of the digits in chunks of four at a time.
 	while remaining > 0 {
 		let num     = num_from_slice(digits, i, 4);
-		let leading = myriad_number(num).unwrap();
-		let (zyllion, largest) = zyllion_number((remaining - 1) / 4);
+		let leading = myriad_number(num)?;
+		let (zyllion, largest) = zyllion_number((remaining - 1) / 4)?;
 
 		if !leading.is_empty() {
 			if !output.is_empty() { output.push(' '); }

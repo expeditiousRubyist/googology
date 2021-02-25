@@ -3,6 +3,8 @@
  * used by Knuth.
  */
 
+use crate::ParseError;
+
 // Substrings used to construct names for the numbers 1-100.
 // These are used by the myriad_number function.
 static NAMES_UPTO_TWENTY: [&str; 20] = [
@@ -55,14 +57,14 @@ pub fn num_from_slice(digits: &str, index: usize, ndigits: usize) -> usize {
 // for sanity's sake. Number names with complex prefixes such as millinillion
 // will need to first break the num into powers of 1000 and invoke this function
 // multiple times.
-pub fn latin_prefix(num: usize) -> Option<String> {
+pub fn latin_prefix(num: usize) -> Result<String, ParseError> {
 	// Sanity check.
-	if num >= 1000 { return None; }
+	if num >= 1000 { return Err(ParseError::InternalError); }
 
 	// We use the same latin prefix construction method used here
 	// http://www.mrob.com/pub/math/largenum.html#conway-wechsler
 	if num < 10 { 
-		return Some(String::from(LATIN_BASE_PREFIXES[num]));
+		return Ok(String::from(LATIN_BASE_PREFIXES[num]));
 	}
 
 	let hs = num / 100;      // Hundreds place
@@ -111,7 +113,7 @@ pub fn latin_prefix(num: usize) -> Option<String> {
 	// Get rid fo the vowel at the end, which is replaced with either
 	// an -illion or -yllion.
 	prefix.pop();
-	Some(prefix)
+	Ok(prefix)
 }
 
 // Helper function for myriad number
@@ -137,9 +139,9 @@ fn name_hundreds(tens: usize, units: usize) -> String {
 // Although this function is also used by Conway-Wechsler, which does use
 // thousands, this will not be a problem as that function will only use this
 // for three digit numbers.
-pub fn myriad_number(num: usize) -> Option<String> {
+pub fn myriad_number(num: usize) -> Result<String, ParseError> {
 	if num >= 10000 {
-		return None;
+		return Err(ParseError::InternalError);
 	}
 
 	let ms = num / 1000;       // Thousands (milia) place
@@ -157,5 +159,5 @@ pub fn myriad_number(num: usize) -> Option<String> {
 	}
 
 	output.pop(); // Remove the space at the end
-	Some(output)
+	Ok(output)
 }

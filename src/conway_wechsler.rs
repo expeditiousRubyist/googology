@@ -29,10 +29,10 @@ use crate::ParseError;
 // Create a name for a single 3 digit zillion number, ending in -illi.
 // Value for zero is "nilli", for use in chained zillion numbers.
 // Values above 999 will panic.
-fn zillion_prefix(num: usize) -> String {
-	let mut name = latin_prefix(num).unwrap();
+fn zillion_prefix(num: usize) -> Result<String, ParseError> {
+	let mut name = latin_prefix(num)?;
 	name.push_str("illi");
-	name
+	Ok(name)
 }
 
 // Create a name for an arbitrary power of 1000.
@@ -41,9 +41,9 @@ fn zillion_prefix(num: usize) -> String {
 // Value for anything greater will involve repeated application of the
 // zillion_prefix function, to create a number ending in "illion",
 // or "ard" depending on whether or not we are using the long scale.
-fn zillion_number(num: usize, short: bool) -> String {
-	if num == 0 { return String::from(""); }
-	if num == 1 { return String::from("thousand"); }
+fn zillion_number(num: usize, short: bool) -> Result<String, ParseError> {
+	if num == 0 { return Ok(String::from("")); }
+	if num == 1 { return Ok(String::from("thousand")); }
 	
 	let mut name   = String::from("");
 	let mut power  = num - 1;
@@ -58,13 +58,13 @@ fn zillion_number(num: usize, short: bool) -> String {
 	// Prefixes technically added in reverse order here.
 	// e.g. in millinillion, first add "nilli", then "milli", then "on".
 	while power > 0 {
-		let prefix = zillion_prefix(power % 1000);
+		let prefix = zillion_prefix(power % 1000)?;
 		name.insert_str(0, prefix.as_str());
 		power /= 1000;
 	}
 
 	name.push_str(suffix);
-	name
+	Ok(name)
 }
 
 /// Gives a full length name for a number represented by an arbitrary sequence
@@ -90,30 +90,31 @@ fn zillion_number(num: usize, short: bool) -> String {
 /// assert_eq!("nineteen billion forty two", billion.as_str());
 /// ```
 pub fn full_name(digits: &str, short: bool) -> Result<String, ParseError> {
-	// Sanity check
-	if !is_all_digits(digits) {
-		return Err(ParseError::InvalidDigit);
-	}
+	// Sanity checks. We want the string to be entirely digits, and we want
+	// to handle the case of leading zeroes. If all digits are zero, we want
+	// to just return the string "zero", and otherwise process from the
+	// first nonzero character.
+	let first_nonzero = is_all_digits(digits)
+		.then(|| digits)
+		.ok_or(ParseError::InvalidDigit)
+		.map(|d| d.find(|c| c != '0'))?;
 
-	// Skip leading zeroes. If all characters are 0, return "zero"
-	let tmp = digits.find(|c| c != '0');
-	let mut output = match tmp {
-		Some(_) => String::from(""),
-		None => String::from("zero"),
-	};
+	let (mut i, mut output) = first_nonzero.map_or_else(
+		|| (0, String::from("zero")),
+		|idx| (idx, String::from(""))
+	);
 
 	if !output.is_empty() { return Ok(output); }
 
 	// Determine how many digits to process, and how many digits are in the
 	// first zillion (e.g. 2 in the case of 12 tredecillion).
-	let mut i = tmp.unwrap();
 	let mut remaining = digits.len() - i;
 	let first = remaining % 3;
 
 	if first > 0 {
 		let num     = num_from_slice(digits, i, first);
-		let leading = myriad_number(num).unwrap();
-		let zillion = zillion_number(remaining / 3, short);
+		let leading = myriad_number(num)?;
+		let zillion = zillion_number(remaining / 3, short)?;
 
 		output.push_str(leading.as_str());
 		if !zillion.is_empty() {
@@ -128,8 +129,8 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, ParseError> {
 	// Handle the rest of the digits in chunks of three at a time.
 	while remaining > 0 {
 		let num     = num_from_slice(digits, i, 3);
-		let leading = myriad_number(num).unwrap();
-		let zillion = zillion_number(remaining / 3 - 1, short);
+		let leading = myriad_number(num)?;
+		let zillion = zillion_number(remaining / 3 - 1, short)?;
 
 		if !leading.is_empty() {
 			if !output.is_empty() { output.push(' '); }
@@ -215,7 +216,7 @@ pub fn power_of_ten(digits: &str, short: bool) -> Result<String, ParseError> {
 	// Add prefixes in reverse order because we are stupid and inefficient.
 	while !power.is_zero() {
 		let m = (&power % 1000u32).to_usize().unwrap();
-		let prefix = zillion_prefix(m);
+		let prefix = zillion_prefix(m)?;
 		output.insert_str(loc, prefix.as_str());
 		power /= 1000u32;
 	}
