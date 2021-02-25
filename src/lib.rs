@@ -10,3 +10,11 @@
 mod common;
 pub mod conway_wechsler;
 pub mod knuth_yllion;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ParseError {
+    Empty,
+    InputTooLarge,
+    InternalError,
+    InvalidDigit,
+}

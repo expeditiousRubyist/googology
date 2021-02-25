@@ -24,6 +24,8 @@ use crate::common::{
 	myriad_number
 };
 
+use crate::ParseError;
+
 // Create a name for a single 3 digit zillion number, ending in -illi.
 // Value for zero is "nilli", for use in chained zillion numbers.
 // Values above 999 will panic.
@@ -87,10 +89,10 @@ fn zillion_number(num: usize, short: bool) -> String {
 /// assert_eq!("nineteen milliard forty two", milliard.as_str());
 /// assert_eq!("nineteen billion forty two", billion.as_str());
 /// ```
-pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
+pub fn full_name(digits: &str, short: bool) -> Result<String, ParseError> {
 	// Sanity check
 	if !is_all_digits(digits) {
-		return Err("digits should only contain the values 0-9")
+		return Err(ParseError::InvalidDigit);
 	}
 
 	// Skip leading zeroes. If all characters are 0, return "zero"
@@ -169,10 +171,10 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, &'static str> {
 /// assert_eq!("one milliard", milliard.as_str());
 /// assert_eq!("one billion", billion.as_str());
 /// ```
-pub fn power_of_ten(digits: &str, short: bool) -> Result<String, &'static str> {
+pub fn power_of_ten(digits: &str, short: bool) -> Result<String, ParseError> {
 	// Sanity check
 	if !is_all_digits(digits) {
-		return Err("digits should only contain the values 0-9")
+		return Err(ParseError::InvalidDigit);
 	}
 
 	let mut power = BigUint::from_str(digits).unwrap();

@@ -45,6 +45,8 @@ use crate::common::{
 	myriad_number
 };
 
+use crate::ParseError;
+
 // Create a name for an arbitrary grouping of four digits.
 // This function's behavior should not be considered perfectly equivalent to the
 // zillion_number function on the conway_wechsler module, because it is not
@@ -91,10 +93,10 @@ fn zyllion_number(num: usize) -> (String, usize) {
 /// let expected = "twelve myllion forty two myriad sixty two hundred eight";
 /// assert_eq!(name.as_str(), expected);
 /// ```
-pub fn full_name(digits: &str) -> Result<String, &'static str> {
+pub fn full_name(digits: &str) -> Result<String, ParseError> {
 	// Sanity check
 	if !is_all_digits(digits) {
-		return Err("digits should only contain the values 0-9")
+		return Err(ParseError::InvalidDigit);
 	}
 
 	// Skip leading zeroes. If all characters are 0, return "zero"
@@ -189,10 +191,10 @@ pub fn full_name(digits: &str) -> Result<String, &'static str> {
 /// let one_hundred_myllion = power_of_ten("10").unwrap();
 /// assert_eq!("one hundred myllion", one_hundred_myllion.as_str());
 /// ```
-pub fn power_of_ten(digits: &str) -> Result<String, &'static str> {
+pub fn power_of_ten(digits: &str) -> Result<String, ParseError> {
 	// Sanity check
 	if !is_all_digits(digits) {
-		return Err("digits should only contain the values 0-9")
+		return Err(ParseError::InvalidDigit);
 	}
 
 	let mut power = BigUint::from_str(digits).unwrap();
@@ -220,7 +222,7 @@ pub fn power_of_ten(digits: &str) -> Result<String, &'static str> {
 		power /= 2u32;
 
 		if zyl_num > 999 { 
-			return Err("Cannot currently support powers this high");
+			return Err(ParseError::InputTooLarge);
 		}
 
 		let m = (&power % 2u32).to_u32().unwrap();
