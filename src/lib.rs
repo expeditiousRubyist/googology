@@ -13,8 +13,13 @@ pub mod knuth_yllion;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseError {
-    Empty,
-    InputTooLarge,
-    InternalError,
-    InvalidDigit,
+	/// Input was the empty string.
+	Empty,
+	/// Input is too large to be given a name by knuth_yllion.
+	InputTooLarge,
+	/// The parser entered some sort of invalid state.
+	/// If this error is returned, there is a bug in the googology crate.
+	InternalError,
+	/// Input contains some digits other than 0-9.
+	InvalidDigit,
 }
