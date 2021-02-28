@@ -173,21 +173,26 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, ParseError> {
 /// assert_eq!("one billion", billion.as_str());
 /// ```
 pub fn power_of_ten(digits: &str, short: bool) -> Result<String, ParseError> {
-	// Sanity check
-	if !is_all_digits(digits) {
-		return Err(ParseError::InvalidDigit);
-	}
-
-	let mut power = BigUint::from_str(digits).unwrap();
+	// Sanity check. We want to convert our input string into a Bignum.
+	// The num_bigint crate doesn't quite allow us to know the cause of
+	// error, but from what we can tell, it's either an invalid digit or
+	// an empty string. So we'll make this clear in our own error.
+	let mut power = is_all_digits(digits)
+		.then(|| digits)
+		.ok_or(ParseError::InvalidDigit)
+		.and_then(|d| BigUint::from_str(d).map_err(|_| ParseError::Empty))?;
 
 	// Get the leading word (e.g. "ten" in "ten million")
-	let m = (&power % 3u32).to_u32().unwrap();
-	let s = match m {
-		0 => "one",
-		1 => "ten",
-		2 => "one hundred",
-		_ => unreachable!(),
-	};
+	let s = (&power % 3u32)
+		.to_u32()
+		.map(|m| match m { 
+			0 => "one",
+			1 => "ten", 
+			2 => "one hundred",
+			_ => "" 
+		})
+		.unwrap_or("");
+
 	let mut output = String::from(s);
 
 	// Convert into power of one thousand
@@ -215,8 +220,11 @@ pub fn power_of_ten(digits: &str, short: bool) -> Result<String, ParseError> {
 
 	// Add prefixes in reverse order because we are stupid and inefficient.
 	while !power.is_zero() {
-		let m = (&power % 1000u32).to_usize().unwrap();
-		let prefix = zillion_prefix(m)?;
+		let prefix = (&power % 1000u32)
+			.to_usize()
+			.ok_or(ParseError::InternalError)
+			.and_then(zillion_prefix)?;
+
 		output.insert_str(loc, prefix.as_str());
 		power /= 1000u32;
 	}

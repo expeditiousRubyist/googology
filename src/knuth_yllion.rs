@@ -193,32 +193,33 @@ pub fn full_name(digits: &str) -> Result<String, ParseError> {
 /// assert_eq!("one hundred myllion", one_hundred_myllion.as_str());
 /// ```
 pub fn power_of_ten(digits: &str) -> Result<String, ParseError> {
-	// Sanity check
-	if !is_all_digits(digits) {
-		return Err(ParseError::InvalidDigit);
-	}
-
-	let mut power = BigUint::from_str(digits).unwrap();
+	// Sanity check. We want to convert our input string into a Bignum.
+	// The num_bigint crate doesn't quite allow us to know the cause of
+	// error, but from what we can tell, it's either an invalid digit or
+	// an empty string. So we'll make this clear in our own error.
+	let mut power = is_all_digits(digits)
+		.then(|| digits)
+		.ok_or(ParseError::InvalidDigit)
+		.and_then(|d| BigUint::from_str(d).map_err(|_| ParseError::Empty))?;
 
 	// Consider small cases
-	let m = (&power % 2u32).to_u32().unwrap();
-	let s = match m {
-		0 => "one",
-		1 => "ten",
-		_ => unreachable!(),
-	};
+	let s = (&power % 2u32)
+		.to_u32()
+		.map(|m| match m { 0 => "one", 1 => "ten", _ => "" })
+		.unwrap_or("");
+
 	let mut output = String::from(s);
 
 	power /= 2u32;
-	let m = (&power % 2u32).to_u32().unwrap();
-	if m == 1 { output.push_str(" hundred"); }
+	let m = (&power % 2u32).to_u32();
+	if m == Some(1) { output.push_str(" hundred"); }
 
 	power /= 2u32;
-	let m = (&power % 2u32).to_u32().unwrap();
-	if m == 2 { output.push_str(" myriad"); }
+	let m = (&power % 2u32).to_u32();
+	if m == Some(2) { output.push_str(" myriad"); }
 
 	// Break down the power one bit at a time, each time adding a new term.
-	let mut zyl_num : usize = 1;
+	let mut zyl_num = 1;
 	while !power.is_zero() {
 		power /= 2u32;
 
@@ -226,9 +227,9 @@ pub fn power_of_ten(digits: &str) -> Result<String, ParseError> {
 			return Err(ParseError::InputTooLarge);
 		}
 
-		let m = (&power % 2u32).to_u32().unwrap();
-		if m == 1 {
-			let prefix = latin_prefix(zyl_num).unwrap();
+		let m = (&power % 2u32).to_u32();
+		if m == Some(1) {
+			let prefix = latin_prefix(zyl_num)?;
 			output.push(' ');
 			output.push_str(prefix.as_str());
 			output.push_str("yllion");
