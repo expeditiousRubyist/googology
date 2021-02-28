@@ -97,7 +97,10 @@ pub fn full_name(digits: &str, short: bool) -> Result<String, ParseError> {
 	let first_nonzero = is_all_digits(digits)
 		.then(|| digits)
 		.ok_or(ParseError::InvalidDigit)
-		.map(|d| d.find(|c| c != '0'))?;
+		.and_then(|d|
+			if d.is_empty() { Err(ParseError::Empty) }
+			else { Ok(d.find(|c| c != '0')) }
+		)?;
 
 	let (mut i, mut output) = first_nonzero.map_or_else(
 		|| (0, String::from("zero")),
@@ -180,7 +183,11 @@ pub fn power_of_ten(digits: &str, short: bool) -> Result<String, ParseError> {
 	let mut power = is_all_digits(digits)
 		.then(|| digits)
 		.ok_or(ParseError::InvalidDigit)
-		.and_then(|d| BigUint::from_str(d).map_err(|_| ParseError::Empty))?;
+		.and_then(|d| 
+			if d.is_empty() { Err(ParseError::Empty) }
+			else { Ok(d) }
+		)
+		.and_then(|d| BigUint::from_str(d).map_err(|_| ParseError::InternalError))?;
 
 	// Get the leading word (e.g. "ten" in "ten million")
 	let s = (&power % 3u32)
