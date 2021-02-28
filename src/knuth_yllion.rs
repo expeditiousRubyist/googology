@@ -247,13 +247,14 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn small_numbers() {
-		let forty_two_hundred = full_name("4200").unwrap();
+	fn small_numbers() -> Result<(), ParseError> {
+		let forty_two_hundred = full_name("4200")?;
 		assert_eq!("forty two hundred", forty_two_hundred.as_str());
+		Ok(())
 	}
 
 	#[test]
-	fn very_large_numbers() {
+	fn very_large_numbers() -> Result<(), ParseError> {
 		// This test is taken verbatim using the example from
 		// Knuth's essay, "Supernatural Numbers"
 		let knuth_example = "\
@@ -276,16 +277,19 @@ mod tests {
 			forty four hundred eight myriad \
 			eighty three hundred twenty seven byllion \
 			seventy eight hundred twenty four myriad myllion";
-		let example_result = full_name(knuth_example).unwrap();
+
+		let example_result = full_name(knuth_example)?;
 		assert_eq!(knuth_expected, example_result.as_str());
+		Ok(())
 	}
 
 	#[test]
-	fn semi_large_power() {
-		let ten_to_the_forty_second = power_of_ten("42").unwrap();
+	fn semi_large_power() -> Result<(), ParseError> {
+		let ten_to_the_forty_second = power_of_ten("42")?;
 		assert_eq!(
 			"one hundred myllion tryllion",
 			ten_to_the_forty_second.as_str()
 		);
+		Ok(())
 	}
 }

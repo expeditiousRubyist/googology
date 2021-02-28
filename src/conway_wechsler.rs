@@ -238,34 +238,38 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn very_small_numbers() {
-		let zero_ss = full_name("0", true).unwrap();
-		let zero_ls = full_name("0", false).unwrap();
+	fn very_small_numbers() -> Result<(), ParseError> {
+		let zero_ss = full_name("0", true)?;
+		let zero_ls = full_name("0", false)?;
 		assert_eq!("zero", zero_ss.as_str());
-		assert_eq!("zero", zero_ls.as_str());		
+		assert_eq!("zero", zero_ls.as_str());
+		Ok(())	
 	}
 
 	#[test]
-	fn small_numbers() {
-		let twelve_ss = full_name("12", true).unwrap();
-		let twelve_ls = full_name("12", false).unwrap();
+	fn small_numbers() -> Result<(), ParseError> {
+		let twelve_ss = full_name("12", true)?;
+		let twelve_ls = full_name("12", false)?;
 		assert_eq!("twelve", twelve_ss.as_str());
 		assert_eq!("twelve", twelve_ls.as_str());
+		Ok(())
 	}
 
 	#[test]
-	fn large_numbers() {
-		let billion = full_name("1000000000", true).unwrap();
-		let milliard = full_name("1000000000", false).unwrap();
+	fn large_numbers() -> Result<(), ParseError> {
+		let billion = full_name("1000000000", true)?;
+		let milliard = full_name("1000000000", false)?;
 		assert_eq!("one milliard", milliard.as_str());
 		assert_eq!("one billion", billion.as_str());
+		Ok(())
 	}
 
 	#[test]
-	fn large_powers() {
-		let googol_ss = power_of_ten("100", true).unwrap();
-		let googol_ls = power_of_ten("100", false).unwrap();
+	fn large_powers() -> Result<(), ParseError> {
+		let googol_ss = power_of_ten("100", true)?;
+		let googol_ls = power_of_ten("100", false)?;
 		assert_eq!("ten duotrigintillion", googol_ss.as_str());
 		assert_eq!("ten sedecilliard", googol_ls.as_str());
+		Ok(())
 	}
 }
