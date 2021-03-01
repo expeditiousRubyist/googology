@@ -255,17 +255,20 @@ pub fn power_of_ten(digits: &str, scale: Scale) -> Result<String, ParseError> {
 	}
 
 	output.push_str(prefix);
-	let loc = output.len(); // Location to insert prefixes at
 
 	// Add zillions in reverse order because we are stupid and inefficient.
+	let mut zillions = Vec::new();
 	while !power.is_zero() {
 		let zillion = (&power % 1000u32)
 			.to_usize()
 			.ok_or(ParseError::InternalError)
 			.and_then(zillion_prefix)?;
-
-		output.insert_str(loc, zillion.as_str());
+		zillions.push(zillion);
 		power /= 1000u32;
+	}
+
+	for z in zillions.iter().rev() {
+		output.push_str(z.as_str());
 	}
 
 	output.push_str(suffix);
