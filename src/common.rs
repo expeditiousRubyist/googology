@@ -141,7 +141,10 @@ fn name_hundreds(tens: usize, units: usize) -> String {
 // for three digit numbers.
 pub fn myriad_number(num: usize) -> Result<String, ParseError> {
 	if num >= 10000 {
-		return Err(ParseError::InternalError);
+		// This error is hypothetically possible from the latin_yllion
+		// function, although it would only occur on systems where the
+		// size of a usize is allowed to be very large. 
+		return Err(ParseError::InputTooLarge);
 	}
 
 	let ms = num / 1000;       // Thousands (milia) place

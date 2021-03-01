@@ -19,8 +19,8 @@
 //! 
 //! For 10^(2^(n+2)), call this: "latin{word for n with spaces removed}yllion"
 //! 
-//! Thus, 10^1002 will be "latintenhundredyllion" and 10^10002 will be called
-//! "latinmyriadyllion", and so on.
+//! Thus, 10^(2^1002) will be "latintenhundredyllion" and 10^(2^10002) will be
+//! called "latinmyriadyllion", and so on.
 //! 
 //! Using the `full_name` function, however, will not require any significant
 //! level of creativity, as a 64-bit system cannot store a string larger than
@@ -173,6 +173,25 @@ pub fn full_name(digits: &str) -> Result<String, ParseError> {
 	Ok(output)
 }
 
+// A helper function for power_of_ten which handles the extremely large yllions.
+// According to Knuth's essay, for large enough n, 10^(2^(n+2)) shall be wrapped
+// in a name such as "latin{word for n with spaces removed}yllion". For us, this
+// value of n starts at 1000, yielding 10^(2^1002) as "latintenhundredyllion".
+// Although this system hypothetically allows for further recursion as in the
+// string "latinlatinlatinbyllionyllionyllionyllion", we do not support this
+// level of recursion at this time.
+fn latin_yllion(n: usize) -> String {
+	let nstr = n.to_string();
+	
+	full_name(nstr.as_str())
+		.unwrap_or_default()
+		.split_whitespace()
+		.fold(String::from("latin"), |mut s, w| {
+			s.push_str(w);
+			s
+		})
+}
+
 /// Gives a name for a number representing a power of ten.
 /// This function is equivalent to using `full_name` with a one followed by
 /// as many zeroes as would be indicated the number described by `digits`.
@@ -231,13 +250,11 @@ pub fn power_of_ten(digits: &str) -> Result<String, ParseError> {
 	while !power.is_zero() {
 		power /= 2u32;
 
-		if zyl_num > 999 { 
-			return Err(ParseError::InputTooLarge);
-		}
-
 		let m = (&power % 2u32).to_u32();
 		if m == Some(1) {
-			let prefix = latin_prefix(zyl_num)?;
+			let prefix = if zyl_num > 999 { latin_yllion(zyl_num) }
+			else { latin_prefix(zyl_num)? };
+
 			output.push(' ');
 			output.push_str(prefix.as_str());
 			output.push_str("yllion");
@@ -297,6 +314,24 @@ mod tests {
 		assert_eq!(
 			"one hundred myllion tryllion",
 			ten_to_the_forty_second.as_str()
+		);
+		Ok(())
+	}
+
+	#[test]
+	fn very_large_power() -> Result<(), ParseError> {
+		// Note: this is 2^1002 exactly.
+		let latin_ten_hundred_yllion = power_of_ten(
+			"42860344287450692837937001962400072422456192468221344\
+			297750015534814042044997444899727935152627834325103786\
+			916702125873007485811427692561743938310298794299215738\
+			271099296923941684298420249484567511816728612185899934\
+			327765069595070236662175784308251658284785910746168670\
+			641719326610497547348822672277504"
+		)?;
+		assert_eq!(
+			"one latintenhundredyllion",
+			latin_ten_hundred_yllion
 		);
 		Ok(())
 	}
