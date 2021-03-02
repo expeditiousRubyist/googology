@@ -243,7 +243,7 @@ pub fn power_of_ten(digits: &str) -> Result<String, ParseError> {
 
 	power /= 2u32;
 	let m = (&power % 2u32).to_u32();
-	if m == Some(2) { output.push_str(" myriad"); }
+	if m == Some(1) { output.push_str(" myriad"); }
 
 	// Break down the power one bit at a time, each time adding a new term.
 	let mut zyl_num = 1;
@@ -305,6 +305,13 @@ mod tests {
 
 		let example_result = full_name(knuth_example)?;
 		assert_eq!(knuth_expected, example_result.as_str());
+		Ok(())
+	}
+
+	#[test]
+	fn small_power() -> Result<(), ParseError> {
+		let ten_hundred_myriad = power_of_ten("7")?;
+		assert_eq!("ten hundred myriad", ten_hundred_myriad.as_str());
 		Ok(())
 	}
 
