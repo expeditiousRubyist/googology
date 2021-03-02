@@ -256,7 +256,7 @@ pub fn power_of_ten(digits: &str, scale: Scale) -> Result<String, ParseError> {
 
 	output.push_str(prefix);
 
-	// Add zillions in reverse order because we are stupid and inefficient.
+	// Add zillions in reverse order.
 	let mut zillions = Vec::new();
 	while !power.is_zero() {
 		let zillion = (&power % 1000u32)
