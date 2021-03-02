@@ -58,8 +58,10 @@ pub fn num_from_slice(digits: &str, index: usize, ndigits: usize) -> usize {
 // will need to first break the num into powers of 1000 and invoke this function
 // multiple times.
 pub fn latin_prefix(num: usize) -> Result<String, ParseError> {
-	// Sanity check.
-	if num >= 1000 { return Err(ParseError::InternalError); }
+	// This error is hypothetically possible from the latin_yllion
+	// function, although it would only occur on systems where the
+	// size of a usize is allowed to be very large. 
+	if num >= 1000 { return Err(ParseError::InputTooLarge); }
 
 	// We use the same latin prefix construction method used here
 	// http://www.mrob.com/pub/math/largenum.html#conway-wechsler
@@ -141,10 +143,8 @@ fn name_hundreds(tens: usize, units: usize) -> String {
 // for three digit numbers.
 pub fn myriad_number(num: usize) -> Result<String, ParseError> {
 	if num >= 10000 {
-		// This error is hypothetically possible from the latin_yllion
-		// function, although it would only occur on systems where the
-		// size of a usize is allowed to be very large. 
-		return Err(ParseError::InputTooLarge);
+		// This should not be possible. 
+		return Err(ParseError::InternalError);
 	}
 
 	let ms = num / 1000;       // Thousands (milia) place
