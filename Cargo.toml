@@ -14,4 +14,4 @@ categories = ["mathematics"]
 
 [dependencies]
 num-traits = "0.2"
-num-bigint = "0.3"
+num-bigint = "0.3.3"
