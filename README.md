@@ -1,4 +1,7 @@
 # Googology
+![Build Status](https://img.shields.io/github/actions/workflow/status/expeditiousRubyist/googology/build.yml?branch=master&label=build)
+![Test Status](https://img.shields.io/github/actions/workflow/status/expeditiousRubyist/googology/test.yml?branch=master&label=tests)
+
 Googlogy is the [study and nomenclature of large numbers.](https://googology.wikia.org/wiki/Googology)
 This crate is focused on the latter component of that description,
 and provides utilities for converting numbers of arbitrarily large size
